@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOX-AI TCVM – Prototyp · Tina Doxtader Ausbildung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brown: #673A15;
+    --brown-dark: #4E2C10;
+    --brown-soft: #8B5A2B;
+    --teal: #00B3D0;
+    --teal-dark: #0090A8;
+    --teal-deep: #00768C;
+    --teal-tint: #E3F6F9;
+    --gold: #B58500;
+    --gold-dark: #8C6800;
+    --gold-light: #F1E1B0;
+    --bg: #FFFFFF;
+    --cream: #FBF8F2;
+    --cream-deep: #F0E7D4;
+    --card: #FFFFFF;
+    --ink: #2B2118;
+    --ink-soft: #6B5C4C;
+    --ink-faint: #9C8F7C;
+    --border: #E7E0D0;
+    --warn-bg: #F6E3C4;
+    --warn-text: #8A5A1E;
+    --badge-purple-bg: #E4DEF4;
+    --badge-purple-text: #5B4B8A;
+    --status-active-bg: #DCEEDC;
+    --status-active-text: #2F7D32;
+    --status-inactive-bg: #EAE7DC;
+    --status-inactive-text: #8A8A7C;
+    --pkg-basic-bg: #F0E7D4;
+    --pkg-basic-text: #6B5C4C;
+    --pkg-pro-bg: #F1E1B0;
+    --pkg-pro-text: #8C6800;
+    --radius: 14px;
+    --radius-sm: 9px;
+    --shadow: 0 8px 24px rgba(40,35,20,0.08);
+    --shadow-sm: 0 2px 8px rgba(40,35,20,0.06);
+    font-family: 'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: #F2EEE5;
+    color: var(--ink);
+    min-height:100vh;
+  }
+  h1,h2,h3,.serif{ font-family:'Fraunces', serif; }
+
+  /* ---------- prototype switcher ---------- */
+  .proto-bar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    padding:12px 16px;
+    background: var(--ink);
+    color:#fff;
+  }
+  .proto-bar .proto-label{
+    font-size:12px; letter-spacing:.02em; color:#C9CFC5; margin-right:6px;
+  }
+  .proto-switch{
+    display:flex; background:rgba(255,255,255,0.08); border-radius:999px; padding:3px;
+  }
+  .proto-switch button{
+    border:none; background:transparent; color:#D8DBD1; padding:7px 16px;
+    border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .proto-switch button.active{ background:#fff; color: var(--ink); }
+
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* ================= MEMBER (PHONE) VIEW ================= */
+  #memberView{ padding: 44px 16px 60px; }
+  .phone-wrap{ display:flex; justify-content:center; }
+  .phone{
+    width:380px; max-width:94vw; height:800px;
+    background:#111; border-radius:44px; padding:14px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+    position:relative;
+  }
+  .phone-screen{
+    background: var(--cream);
+    width:100%; height:100%; border-radius:32px; overflow:hidden;
+    display:flex; flex-direction:column; position:relative;
+  }
+  .statusbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 22px 4px; font-size:14px; font-weight:600; color:var(--ink);
+  }
+  .statusbar .dot{ width:64px; height:22px; background:#000; border-radius:14px; margin:0 auto; position:absolute; left:50%; transform:translateX(-50%); top:10px;}
+  .icons{ display:flex; gap:5px; align-items:center; }
+  .screen{ display:none; flex:1; min-height:0; flex-direction:column; }
+  .screen.active{ display:flex; }
+
+  /* --- login screen --- */
+  #loginScreen{ padding: 18px 26px 26px; align-items:stretch; text-align:center; overflow-y:auto;}
+  .logo-badge{
+    width:64px;height:64px;border-radius:18px;background:#fff;
+    display:flex;align-items:center;justify-content:center;margin:10px auto 14px;
+    box-shadow: var(--shadow-sm); padding:6px;
+  }
+  .logo-badge svg{ width:100%; height:100%; }
+  .logo-title{ font-size:26px; font-weight:700; margin:0 0 2px; }
+  .logo-sub{ font-size:12.5px; color:var(--ink-soft); margin:0 0 26px; }
+  .welcome-title{ font-size:19px; font-weight:700; text-align:left; margin:0 0 16px; }
+  .field{ text-align:left; margin-bottom:14px; }
+  .field label{ display:block; font-size:12.5px; color:var(--ink-soft); margin-bottom:6px; }
+  .field input{
+    width:100%; padding:13px 14px; border-radius:11px; border:1px solid var(--border);
+    background:#fff; font-size:14.5px; font-family:'Inter',sans-serif; color:var(--ink);
+  }
+  .field input:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+  .hint-text{ font-size:12px; color:var(--ink-faint); text-align:left; margin:-4px 0 20px; line-height:1.45; }
+  .btn-primary{
+    width:100%; padding:14px; border:none; border-radius:12px; background:var(--brown);
+    color:#fff; font-weight:700; font-size:15px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .btn-primary:hover{ background:var(--brown-dark); }
+  .security-note{
+    display:flex; gap:10px; align-items:flex-start; text-align:left;
+    background:var(--cream-deep); border-radius:12px; padding:12px 14px; margin-top:18px;
+    font-size:12px; color:var(--ink-soft); line-height:1.45;
+  }
+  .footer-note{ font-size:11.5px; color:var(--ink-faint); margin-top:22px; }
+
+  /* --- chat screen --- */
+  .chat-header{
+    display:flex; align-items:center; gap:10px; padding:14px 18px;
+    border-bottom:1px solid var(--border); background:var(--cream);
+  }
+  .avatar-round{
+    width:38px;height:38px;border-radius:50%;background:#fff;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    box-shadow: var(--shadow-sm); padding:4px;
+  }
+  .avatar-round svg{ width:100%; height:100%; }
+  .chat-header-title{ font-weight:700; font-size:15.5px; }
+  .chat-header-sub{ font-size:11.5px; color:var(--ink-soft); display:flex; align-items:center; gap:5px;}
+  .chat-header-sub .live-dot{ width:6px;height:6px;border-radius:50%; background:#3F9142; display:inline-block; }
+  .pill-mini{ display:inline-block; padding:1px 8px; border-radius:999px; font-size:10px; font-weight:700; margin-left:2px; }
+  .kennzeichnung{
+    font-size:11px; color:var(--ink-faint); text-align:center; padding:8px 20px 0;
+  }
+  .maint-banner{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:8px;
+    background:var(--warn-bg); color:var(--warn-text); font-size:11px; line-height:1.4;
+    padding:9px 16px; margin:0;
+  }
+  .maint-banner button{ background:none; border:none; color:var(--warn-text); font-size:13px; cursor:pointer; opacity:.65; flex-shrink:0; }
+  .maint-banner button:hover{ opacity:1; }
+  .chat-header{ justify-content:space-between; }
+  .support-btn{
+    width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; color:var(--ink-soft);
+  }
+  .support-btn:hover{ border-color:var(--teal); color:var(--teal-deep); }
+  .session-note{ font-size:10.5px; color:var(--ink-faint); text-align:center; padding-bottom:6px; background:var(--cream); }
+  .messages{ flex:1; min-height:0; overflow-y:auto; padding:14px 16px 8px; }
+  .msg-label{ font-size:10.5px; font-weight:700; letter-spacing:.04em; color:var(--teal-deep); margin:6px 0 5px 2px; }
+  .msg-row{ margin-bottom:14px; clear:both; }
+  .msg-row.me{ text-align:right; }
+  .msg-row.ai{ text-align:left; }
+  .msg-col{ display:inline-block; max-width:82%; text-align:left; vertical-align:top; }
+  .bubble{ padding:11px 14px; border-radius:16px; font-size:14px; line-height:1.42; display:inline-block; text-align:left; max-width:100%; }
+  .msg-row.ai .bubble{ background:#fff; color:var(--ink); border-bottom-left-radius:5px; box-shadow: var(--shadow-sm);}
+  .msg-row.me .bubble{ background:var(--teal-tint); color:var(--ink); border-bottom-right-radius:5px; }
+  .msg-row.ai .bubble.fallback{ background:var(--warn-bg); color:#5B3E10; }
+  .msg-time{ font-size:10.5px; color:var(--ink-faint); margin-top:4px; }
+  .escalation-note{
+    display:flex; align-items:center; gap:5px; font-size:11px; color:var(--warn-text);
+    margin-top:5px; font-weight:600;
+  }
+  .feedback-row{ display:flex; gap:6px; margin-top:6px; }
+  .fb-btn{
+    border:1px solid var(--border); background:#fff; border-radius:8px; width:26px;height:26px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer; color:var(--ink-soft);
+  }
+  .fb-btn.active-up{ background:#DCEEDC; border-color:#9FCB9F; color:#2F7D32; }
+  .fb-btn.active-down{ background:var(--warn-bg); border-color:#E0BE85; color:var(--warn-text); }
+  .chat-input-bar{
+    display:flex; gap:9px; align-items:center; padding:12px 14px 16px; border-top:1px solid var(--border); background:var(--cream);
+  }
+  .chat-input-bar input{
+    flex:1; padding:12px 16px; border-radius:22px; border:1px solid var(--border);
+    background:#fff; font-size:14px; font-family:'Inter',sans-serif;
+  }
+  .send-btn{
+    width:42px;height:42px;border-radius:50%; background:var(--teal); border:none;
+    color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .send-btn:hover{ background:var(--teal-dark); }
+  .chat-hint{ font-size:10.5px; color:var(--ink-faint); text-align:center; padding-bottom:6px; background:var(--cream);}
+  .home-indicator{ position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:120px; height:5px; background:#000; opacity:.6; border-radius:3px;}
+
+  /* ================= ADMIN VIEW ================= */
+  #adminView{}
+  .admin-shell{ display:flex; min-height:100vh; background:var(--bg); }
+  .sidebar{
+    width:250px; background:#fff; color:var(--ink); flex-shrink:0;
+    display:flex; flex-direction:column; padding:22px 16px;
+    border-right:1px solid var(--border);
+  }
+  .sidebar-logo{ display:flex; align-items:center; gap:10px; margin-bottom:30px; padding:0 6px;}
+  .sidebar-logo .logo-badge{ width:38px;height:38px;border-radius:10px; margin:0; padding:4px; box-shadow:none; border:1px solid var(--border);}
+  .sidebar-logo-text b{ display:block; font-size:15px; font-family:'Fraunces',serif; color:var(--ink); }
+  .sidebar-logo-text span{ font-size:10.5px; color:var(--ink-faint); }
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:10px;
+    color:var(--ink-soft); text-decoration:none; font-size:14px; font-weight:500; cursor:pointer; margin-bottom:4px;
+  }
+  .nav-item:hover{ background:var(--cream); }
+  .nav-item.active{ background:var(--teal-tint); color:var(--teal-deep); font-weight:600; }
+  .sidebar-footer{
+    margin-top:auto; padding-top:16px; border-top:1px solid var(--border);
+    font-size:12px; color:var(--ink-faint); line-height:1.5;
+  }
+  .sidebar-footer b{ color:var(--ink); }
+  .admin-main{ flex:1; background:var(--bg); padding:34px 44px; overflow-x:auto;}
+  .admin-page{ display:none; }
+  .admin-page.active{ display:block; }
+  .page-header{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:22px; gap:20px; flex-wrap:wrap;}
+  .page-header h1{ font-size:26px; margin:0 0 6px; }
+  .page-header p{ font-size:13.5px; color:var(--ink-soft); margin:0; max-width:520px; line-height:1.5;}
+  .btn-dark{
+    background:var(--brown); color:#fff; border:none; padding:11px 18px; border-radius:10px;
+    font-weight:600; font-size:13.5px; cursor:pointer; display:flex; align-items:center; gap:7px; white-space:nowrap;
+    font-family:'Inter',sans-serif;
+  }
+  .btn-dark:hover{ background:var(--brown-dark); }
+  .stat-cards{ display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap;}
+  .stat-card{
+    background:#fff; border-radius:var(--radius); padding:18px 22px; box-shadow:var(--shadow-sm);
+    min-width:150px;
+  }
+  .stat-card .num{ font-size:28px; font-weight:700; font-family:'Fraunces',serif; }
+  .stat-card .lbl{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+  .table-card{ background:#fff; border-radius:var(--radius); box-shadow:var(--shadow-sm); overflow:hidden;}
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead th{
+    text-align:left; background:var(--cream-deep); color:var(--ink-soft); font-weight:600;
+    padding:12px 18px; font-size:12px; text-transform:none;
+  }
+  tbody td{ padding:14px 18px; border-top:1px solid var(--border); vertical-align:middle; }
+  tbody tr:hover{ background:#FBFAF6; }
+  .cell-sub{ font-size:11.5px; color:var(--ink-faint); }
+  .pill{ display:inline-block; padding:3px 11px; border-radius:999px; font-size:11.5px; font-weight:600; }
+  .pill-version{ background:var(--badge-purple-bg); color:var(--badge-purple-text); }
+  .pill-active{ background:var(--status-active-bg); color:var(--status-active-text); cursor:pointer; }
+  .pill-inactive{ background:var(--status-inactive-bg); color:var(--status-inactive-text); cursor:pointer; }
+  .pill-package-basic{ background:var(--pkg-basic-bg); color:var(--pkg-basic-text); }
+  .pill-package-pro{ background:var(--pkg-pro-bg); color:var(--pkg-pro-text); }
+  .field select{
+    width:100%; padding:13px 14px; border-radius:11px; border:1px solid var(--border);
+    background:#fff; font-size:14.5px; font-family:'Inter',sans-serif; color:var(--ink); cursor:pointer;
+  }
+  .field select:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+  .field-hint{ font-size:11.5px; color:var(--ink-faint); margin:5px 0 0; line-height:1.4; }
+  .row-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .btn-outline{
+    border:1px solid var(--border); background:#fff; padding:7px 13px; border-radius:8px;
+    font-size:12.5px; font-weight:600; cursor:pointer; color:var(--ink); font-family:'Inter',sans-serif;
+  }
+  .btn-outline:hover{ border-color:var(--teal); color:var(--teal-deep); }
+  .btn-outline.danger:hover{ border-color:#B4453A; color:#B4453A; }
+  .pager{ display:flex; justify-content:flex-end; gap:10px; padding:14px 18px; }
+  .pager button{
+    width:32px;height:32px;border-radius:50%; border:1px solid var(--border); background:#fff; cursor:pointer;
+  }
+  .banner-card{
+    background:#fff; border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:20px 22px; margin-top:20px; max-width:640px;
+  }
+  .banner-card h3{ font-size:15px; margin:0 0 4px; }
+  .banner-card p{ font-size:12.5px; color:var(--ink-soft); margin:0 0 14px; }
+  .banner-editor-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .banner-editor-row input{
+    flex:1; min-width:220px; padding:11px 13px; border-radius:9px; border:1px solid var(--border);
+    font-size:13.5px; font-family:'Inter',sans-serif; color:var(--ink);
+  }
+
+  /* ---------- modals ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(30,28,20,0.45); z-index:100;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.active{ display:flex; }
+  .modal-card{
+    background:#fff; border-radius:16px; width:460px; max-width:100%; max-height:86vh; overflow-y:auto;
+    padding:26px 28px; box-shadow:0 24px 60px rgba(0,0,0,0.25);
+  }
+  .modal-card h2{ font-size:19px; margin:0 0 6px; }
+  .modal-card .modal-sub{ font-size:13px; color:var(--ink-soft); margin:0 0 20px; line-height:1.5;}
+  .modal-close{ float:right; background:none; border:none; font-size:18px; cursor:pointer; color:var(--ink-faint); }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:22px; }
+  .btn-ghost{ background:none; border:none; padding:11px 16px; font-weight:600; font-size:13.5px; color:var(--ink-soft); cursor:pointer; font-family:'Inter',sans-serif;}
+  .upload-drop{
+    border:1.5px dashed var(--border); border-radius:12px; padding:26px; text-align:center; color:var(--ink-faint);
+    font-size:13px; margin-bottom:16px; background:var(--cream);
+  }
+  .version-item{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-top:1px solid var(--border); font-size:13.5px;}
+  .version-item:first-child{ border-top:none; }
+  .version-item .vmeta{ color:var(--ink-faint); font-size:12px; }
+
+  .toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:13px 22px; border-radius:10px; font-size:13.5px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.25); opacity:0; pointer-events:none; transition:all .25s ease; z-index:200;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width: 900px){
+    .admin-main{ padding:24px 18px; }
+    .sidebar{ width:210px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <span class="proto-label">Prototyp-Ansicht:</span>
+  <div class="proto-switch">
+    <button id="btnShowMember" class="active" onclick="showView('member')">Mitgliederbereich</button>
+    <button id="btnShowAdmin" onclick="showView('admin')">Admin-Bereich</button>
+  </div>
+</div>
+
+<!-- ============ MEMBER VIEW ============ -->
+<div id="memberView" class="view active">
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="phone-screen">
+
+        <!-- LOGIN -->
+        <div id="loginScreen" class="screen active">
+          <div class="statusbar"><span>9:41</span><div class="dot"></div><span class="icons">📶 🔋</span></div>
+          <div class="logo-badge">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="32" fill="#673A15"/><text x="30" y="43" font-family="Fraunces, serif" font-weight="700" font-size="30" text-anchor="middle" fill="#00B3D0">D</text><circle cx="47" cy="17" r="4.5" fill="#B58500"/></svg>
+          </div>
+          <h1 class="logo-title serif" style="font-size:21px;">DOX-AI TCVM</h1>
+          <p class="logo-sub">KI-Assistent · Tina Doxtader Ausbildung</p>
+          <h2 class="welcome-title">Willkommen zurück</h2>
+          <div class="field">
+            <label>E-Mail-Adresse</label>
+            <input type="email" placeholder="du@beispiel.de">
+          </div>
+          <div class="field">
+            <label>Passwort</label>
+            <input type="password" placeholder="••••••••••">
+          </div>
+          <p class="hint-text">Erste Anmeldung? Du wirst gebeten, dein Passwort direkt zu ändern.</p>
+          <button class="btn-primary" onclick="goToChat()">Anmelden</button>
+          <div class="security-note">
+            <span>🔒</span>
+            <span>Aus Sicherheitsgründen ist pro Account nur eine aktive Sitzung gleichzeitig möglich.</span>
+          </div>
+          <p class="footer-note">Dieser Bereich nutzt einen KI-gestützten Assistenten.</p>
+        </div>
+
+        <!-- CHAT -->
+        <div id="chatScreen" class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dot"></div><span class="icons">📶 🔋</span></div>
+          <div class="chat-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="avatar-round">
+                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="32" fill="#673A15"/><text x="30" y="43" font-family="Fraunces, serif" font-weight="700" font-size="30" text-anchor="middle" fill="#00B3D0">D</text><circle cx="47" cy="17" r="4.5" fill="#B58500"/></svg>
+              </div>
+              <div>
+                <div class="chat-header-title">DOX-AI TCVM</div>
+                <div class="chat-header-sub"><span class="live-dot"></span>An 1 Gerät angemeldet<span class="pill pill-package-basic pill-mini">Basic</span></div>
+              </div>
+            </div>
+            <button class="support-btn" title="Support kontaktieren" onclick="openModal('modalSupport')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.2 0-2.3-.25-3.3-.7L4 20l1.1-4.2A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+            </button>
+          </div>
+          <div class="maint-banner" id="maintBanner">
+            <span>🔧 <span id="maintBannerText">Wartung: Sonntag 22–23 Uhr eingeschränkt erreichbar.</span></span>
+            <button onclick="document.getElementById('maintBanner').style.display='none'" aria-label="Hinweis schließen">✕</button>
+          </div>
+          <p class="kennzeichnung">DOX-AI TCVM ist ein KI-gestützter Assistent und kennzeichnet sich als solcher.</p>
+
+          <div class="messages" id="messages">
+            <div class="msg-row ai"><div class="msg-col">
+              <div class="msg-label">KI-ANTWORT</div>
+              <div class="bubble">Hallo! Ich bin DOX-AI TCVM, dein KI-gestützter Assistent. Wie kann ich dir bei Pferd oder Hund helfen?</div>
+              <div class="msg-time">09:41</div>
+            </div></div>
+            <div class="msg-row me"><div class="msg-col">
+              <div class="bubble">Mein Pferd hat gerade eine Kolik. Was mache ich?</div>
+              <div class="msg-time">09:42</div>
+            </div></div>
+            <div class="msg-row ai"><div class="msg-col">
+              <div class="msg-label">KI-ANTWORT</div>
+              <div class="bubble">Wie ist der Puls, wie die Zunge? Zeigt das Pferd Unruhe oder Schwitzen?</div>
+              <div class="msg-time">09:42</div>
+              <div class="feedback-row">
+                <button class="fb-btn" onclick="feedback(this,'up')">👍</button>
+                <button class="fb-btn" onclick="feedback(this,'down')">👎</button>
+              </div>
+            </div></div>
+            <div class="msg-row me"><div class="msg-col">
+              <div class="bubble">Puls erhöht, Zunge blass, es scharrt viel.</div>
+              <div class="msg-time">09:44</div>
+            </div></div>
+            <div class="msg-row ai"><div class="msg-col">
+              <div class="msg-label">KI-ANTWORT</div>
+              <div class="bubble fallback">Dazu fehlt mir gesicherte Information. Tina wurde informiert.</div>
+              <div class="escalation-note">⚠️ Team wurde benachrichtigt</div>
+              <div class="feedback-row">
+                <button class="fb-btn" onclick="feedback(this,'up')">👍</button>
+                <button class="fb-btn" onclick="feedback(this,'down')">👎</button>
+              </div>
+            </div></div>
+          </div>
+          <p class="chat-hint">Tipp zum Testen: Tippe „Myelopathie", um die Eskalation auszulösen.</p>
+          <p class="session-note">🔒 Neue Sitzung — dieser Chat wird nicht dauerhaft gespeichert.</p>
+          <div class="chat-input-bar">
+            <input id="chatInput" type="text" placeholder="Frage stellen …" onkeydown="if(event.key==='Enter')sendMessage()">
+            <button class="send-btn" onclick="sendMessage()">➤</button>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN VIEW ============ -->
+<div id="adminView" class="view">
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-badge"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="32" fill="#673A15"/><text x="30" y="43" font-family="Fraunces, serif" font-weight="700" font-size="30" text-anchor="middle" fill="#00B3D0">D</text><circle cx="47" cy="17" r="4.5" fill="#B58500"/></svg></div>
+        <div class="sidebar-logo-text"><b>DOX-AI TCVM</b><span>Admin-Bereich</span></div>
+      </div>
+      <div class="nav-item active" id="navMitglieder" onclick="showAdminPage('mitglieder')">👤 Mitgliederverwaltung</div>
+      <div class="nav-item" id="navAdmins" onclick="showAdminPage('admins')">🔑 Adminverwaltung</div>
+      <div class="nav-item" id="navContent" onclick="showAdminPage('content')">📖 Content-Pflege</div>
+      <div class="sidebar-footer">Angemeldet als <b>Tina</b><br>TCVM-Ausbildung · Admin</div>
+    </aside>
+
+    <main class="admin-main">
+
+      <!-- Content-Pflege -->
+      <section id="page-content" class="admin-page">
+        <div class="page-header">
+          <div>
+            <h1 class="serif">Content-Pflege</h1>
+            <p>Inhalte für die Wissensdatenbank hochladen und aktualisieren. Jede Änderung wird automatisch versioniert — frühere Fassungen bleiben nachvollziehbar erhalten und lassen sich bei Bedarf wiederherstellen.</p>
+          </div>
+          <button class="btn-dark" onclick="openModal('modalUpload')">↑ Dokument hochladen</button>
+        </div>
+        <div class="stat-cards">
+          <div class="stat-card"><div class="num">24</div><div class="lbl">Dokumente aktiv</div></div>
+          <div class="stat-card"><div class="num">3</div><div class="lbl">Diese Woche aktualisiert</div></div>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead><tr><th>Titel</th><th>Quelle</th><th>Version</th><th>Zuletzt aktualisiert</th><th>Aktionen</th></tr></thead>
+            <tbody id="docTableBody">
+              <tr data-doc="blutmangel">
+                <td>Leitfaden Blutmangel.pdf</td><td>PDF</td><td><span class="pill pill-version">v3</span></td>
+                <td>24.08.2026 <span class="cell-sub">· Tina</span></td>
+                <td class="row-actions">
+                  <button class="btn-outline" onclick="openVerlauf('blutmangel')">Verlauf</button>
+                  <button class="btn-outline" onclick="toast('Bearbeiten-Ansicht ist im Prototyp nicht hinterlegt.')">Bearbeiten</button>
+                  <button class="btn-outline danger" onclick="deleteDoc(this)">Löschen</button>
+                </td>
+              </tr>
+              <tr data-doc="livecall23">
+                <td>Live-Call 23 (Transkript)</td><td>Video → Text</td><td><span class="pill pill-version">v1</span></td>
+                <td>12.08.2026 <span class="cell-sub">· Tina</span></td>
+                <td class="row-actions">
+                  <button class="btn-outline" onclick="openVerlauf('livecall23')">Verlauf</button>
+                  <button class="btn-outline" onclick="toast('Bearbeiten-Ansicht ist im Prototyp nicht hinterlegt.')">Bearbeiten</button>
+                  <button class="btn-outline danger" onclick="deleteDoc(this)">Löschen</button>
+                </td>
+              </tr>
+              <tr data-doc="magen36">
+                <td>Akupunktur Magen 36 (Transkript)</td><td>Video → Text</td><td><span class="pill pill-version">v2</span></td>
+                <td>20.08.2026 <span class="cell-sub">· Fiona</span></td>
+                <td class="row-actions">
+                  <button class="btn-outline" onclick="openVerlauf('magen36')">Verlauf</button>
+                  <button class="btn-outline" onclick="toast('Bearbeiten-Ansicht ist im Prototyp nicht hinterlegt.')">Bearbeiten</button>
+                  <button class="btn-outline danger" onclick="deleteDoc(this)">Löschen</button>
+                </td>
+              </tr>
+              <tr data-doc="zunge">
+                <td>Grundlagen Zungendiagnostik.pdf</td><td>PDF</td><td><span class="pill pill-version">v1</span></td>
+                <td>05.08.2026 <span class="cell-sub">· Tina</span></td>
+                <td class="row-actions">
+                  <button class="btn-outline" onclick="openVerlauf('zunge')">Verlauf</button>
+                  <button class="btn-outline" onclick="toast('Bearbeiten-Ansicht ist im Prototyp nicht hinterlegt.')">Bearbeiten</button>
+                  <button class="btn-outline danger" onclick="deleteDoc(this)">Löschen</button>
+                </td>
+              </tr>
+              <tr data-doc="livecall24">
+                <td>Live-Call 24 (Transkript)</td><td>Video → Text</td><td><span class="pill pill-version">v1</span></td>
+                <td>27.08.2026 <span class="cell-sub">· Tina</span></td>
+                <td class="row-actions">
+                  <button class="btn-outline" onclick="openVerlauf('livecall24')">Verlauf</button>
+                  <button class="btn-outline" onclick="toast('Bearbeiten-Ansicht ist im Prototyp nicht hinterlegt.')">Bearbeiten</button>
+                  <button class="btn-outline danger" onclick="deleteDoc(this)">Löschen</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pager"><button onclick="toast('Prototyp zeigt nur eine Seite.')">←</button><button onclick="toast('Prototyp zeigt nur eine Seite.')">→</button></div>
+        </div>
+
+        <div class="banner-card">
+          <h3 class="serif">Banner-Hinweis für Mitglieder</h3>
+          <p>Wird als Wartungs- oder Verfügbarkeitshinweis oben im Chat angezeigt.</p>
+          <div class="banner-editor-row">
+            <input type="text" id="bannerText" value="Wartung: Sonntag 22–23 Uhr eingeschränkt erreichbar.">
+            <button class="btn-dark" onclick="saveBanner()">Speichern</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Adminverwaltung -->
+      <section id="page-admins" class="admin-page">
+        <div class="page-header">
+          <div>
+            <h1 class="serif">Adminverwaltung</h1>
+            <p>Wer im Team Zugriff auf Mitglieder- und Content-Verwaltung hat. Alle Admin-Zugänge haben dieselben Rechte.</p>
+          </div>
+          <button class="btn-dark" onclick="openModal('modalNeuerAdmin')">+ Admin hinzufügen</button>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead><tr><th>Name</th><th>E-Mail</th><th>Rechte</th><th>Aktionen</th></tr></thead>
+            <tbody id="adminTableBody">
+              <tr>
+                <td>Tina Doxtader <span class="cell-sub" style="display:block;">Haupt-Admin</span></td>
+                <td>tina@tina-doxtader.com</td>
+                <td>Mitglieder, Admins &amp; Content</td>
+                <td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button></td>
+              </tr>
+              <tr>
+                <td>Sandra</td>
+                <td>sandra@tina-doxtader.com</td>
+                <td>Mitglieder &amp; Content</td>
+                <td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button><button class="btn-outline danger" onclick="removeAdmin(this)">Entfernen</button></td>
+              </tr>
+              <tr>
+                <td>Michelle</td>
+                <td>michelle@tina-doxtader.com</td>
+                <td>Mitglieder &amp; Content</td>
+                <td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button><button class="btn-outline danger" onclick="removeAdmin(this)">Entfernen</button></td>
+              </tr>
+              <tr>
+                <td>Fiona</td>
+                <td>fiona@tina-doxtader.com</td>
+                <td>Mitglieder &amp; Content</td>
+                <td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button><button class="btn-outline danger" onclick="removeAdmin(this)">Entfernen</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Mitgliederverwaltung -->
+      <section id="page-mitglieder" class="admin-page active">
+        <div class="page-header">
+          <div>
+            <h1 class="serif">Mitgliederverwaltung</h1>
+            <p>Zugänge anlegen, Status verwalten und Passwörter zurücksetzen. Zugangsdaten werden automatisch per E-Mail versendet.</p>
+          </div>
+          <button class="btn-dark" onclick="openModal('modalNeuesMitglied')">+ Neues Mitglied</button>
+        </div>
+        <div class="stat-cards">
+          <div class="stat-card"><div class="num" id="statTotal">5</div><div class="lbl">Mitglieder insgesamt</div></div>
+          <div class="stat-card"><div class="num" id="statActive">4</div><div class="lbl">Aktive Mitglieder</div></div>
+          <div class="stat-card"><div class="num" id="statInactive">1</div><div class="lbl">Inaktive Mitglieder</div></div>
+          <div class="stat-card"><div class="num" id="statBasic" style="color:var(--ink-soft);">3</div><div class="lbl">Basic-Mitglieder</div></div>
+          <div class="stat-card"><div class="num" id="statPro" style="color:var(--gold-dark);">2</div><div class="lbl">Professional-Mitglieder</div></div>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead><tr><th>Name</th><th>E-Mail</th><th>Paket</th><th>Status</th><th>Erstellt am</th><th>Aktionen</th></tr></thead>
+            <tbody id="memberTableBody">
+              <tr><td>Anna Muster</td><td>anna.muster@web.de</td><td><span class="pill pill-package-basic">Basic</span></td><td><span class="pill pill-active" onclick="toggleMemberStatus(this)">Aktiv</span></td><td>18.08.2026</td>
+                <td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button><button class="btn-outline danger" onclick="removeMember(this)">Entfernen</button></td></tr>
+              <tr><td>Max Beispiel</td><td>max.beispiel@gmx.de</td><td><span class="pill pill-package-basic">Basic</span></td><td><span class="pill pill-inactive" onclick="toggleMemberStatus(this)">Inaktiv</span></td><td>18.08.2026</td>
+                <td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button><button class="btn-outline danger" onclick="removeMember(this)">Entfernen</button></td></tr>
+              <tr><td>Lea Test</td><td>lea.test@t-online.de</td><td><span class="pill pill-package-pro">Professional</span></td><td><span class="pill pill-active" onclick="toggleMemberStatus(this)">Aktiv</span></td><td>19.08.2026</td>
+                <td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button><button class="btn-outline danger" onclick="removeMember(this)">Entfernen</button></td></tr>
+              <tr><td>Petra Gisch</td><td>petra.gisch@web.de</td><td><span class="pill pill-package-basic">Basic</span></td><td><span class="pill pill-active" onclick="toggleMemberStatus(this)">Aktiv</span></td><td>20.08.2026</td>
+                <td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button><button class="btn-outline danger" onclick="removeMember(this)">Entfernen</button></td></tr>
+              <tr><td>Rahel Pfammatter</td><td>r.pfammatter@bluewin.ch</td><td><span class="pill pill-package-pro">Professional</span></td><td><span class="pill pill-active" onclick="toggleMemberStatus(this)">Aktiv</span></td><td>21.08.2026</td>
+                <td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button><button class="btn-outline danger" onclick="removeMember(this)">Entfernen</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-overlay" id="modalUpload">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal('modalUpload')">✕</button>
+    <h2 class="serif">Dokument hochladen</h2>
+    <p class="modal-sub">Neue oder aktualisierte Inhalte werden automatisch versioniert. Ältere Fassungen bleiben im Verlauf erhalten und werden aus der aktiven Suche entfernt.</p>
+    <div class="upload-drop">📄 Datei hierher ziehen oder auswählen<br><span style="font-size:11.5px;">PDF, DOCX oder Video-Transkript</span></div>
+    <div class="field"><label>Titel</label><input type="text" placeholder="z. B. Leitfaden Nierenschwäche.pdf"></div>
+    <div class="field"><label>Quelle</label><input type="text" placeholder="PDF / Video → Text"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modalUpload')">Abbrechen</button>
+      <button class="btn-dark" onclick="closeModal('modalUpload'); toast('Dokument wurde hochgeladen und wird verarbeitet.')">Hochladen</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalVerlauf">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal('modalVerlauf')">✕</button>
+    <h2 class="serif" id="verlaufTitle">Verlauf</h2>
+    <p class="modal-sub">Frühere Versionen bleiben nachvollziehbar erhalten. Nur die aktive Version ist für DOX-AI TCVM durchsuchbar.</p>
+    <div id="verlaufList"></div>
+    <div class="modal-actions"><button class="btn-ghost" onclick="closeModal('modalVerlauf')">Schließen</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalNeuesMitglied">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal('modalNeuesMitglied')">✕</button>
+    <h2 class="serif">Neues Mitglied</h2>
+    <p class="modal-sub">Die Zugangsdaten werden automatisch per E-Mail an das neue Mitglied versendet.</p>
+    <div class="field"><label>Name</label><input type="text" id="newMemberName" placeholder="Vorname Nachname"></div>
+    <div class="field"><label>E-Mail-Adresse</label><input type="email" id="newMemberEmail" placeholder="name@beispiel.de"></div>
+    <div class="field">
+      <label>Paket</label>
+      <select id="newMemberPackage">
+        <option value="basic">Basic</option>
+        <option value="pro">Professional</option>
+      </select>
+      <p class="field-hint">Basic: für den gelegentlichen Gebrauch. Professional: höheres Tageslimit für die tägliche Praxisnutzung.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modalNeuesMitglied')">Abbrechen</button>
+      <button class="btn-dark" onclick="addMember()">Einladen</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalNeuerAdmin">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal('modalNeuerAdmin')">✕</button>
+    <h2 class="serif">Admin hinzufügen</h2>
+    <p class="modal-sub">Die Zugangsdaten werden automatisch per E-Mail versendet. Alle Admin-Zugänge erhalten dieselben Rechte.</p>
+    <div class="field"><label>Name</label><input type="text" id="newAdminName" placeholder="Vorname Nachname"></div>
+    <div class="field"><label>E-Mail-Adresse</label><input type="email" id="newAdminEmail" placeholder="name@tina-doxtader.com"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modalNeuerAdmin')">Abbrechen</button>
+      <button class="btn-dark" onclick="addAdmin()">Einladen</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalSupport">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal('modalSupport')">✕</button>
+    <h2 class="serif">Support kontaktieren</h2>
+    <p class="modal-sub">Für alles, wobei DOX-AI TCVM dir nicht weiterhelfen konnte. Reaktionszeit: 48 Std. außerhalb von Wochenenden.</p>
+    <div class="field"><label>Deine Nachricht</label><textarea rows="4" id="supportMsg" style="width:100%;padding:11px 13px;border-radius:9px;border:1px solid var(--border);font-family:'Inter',sans-serif;font-size:13.5px;resize:vertical;" placeholder="Was können wir für dich tun?"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modalSupport')">Abbrechen</button>
+      <button class="btn-dark" onclick="closeModal('modalSupport'); toast('Nachricht an das Support-Team gesendet.')">Nachricht senden</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ---------- top-level view switch ----------
+  function showView(v){
+    document.getElementById('memberView').classList.toggle('active', v==='member');
+    document.getElementById('adminView').classList.toggle('active', v==='admin');
+    document.getElementById('btnShowMember').classList.toggle('active', v==='member');
+    document.getElementById('btnShowAdmin').classList.toggle('active', v==='admin');
+  }
+
+  function goToChat(){
+    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('chatScreen').classList.add('active');
+    var m = document.getElementById('messages');
+    requestAnimationFrame(function(){ m.scrollTop = m.scrollHeight; });
+  }
+
+  // ---------- admin nav ----------
+  function showAdminPage(page){
+    document.querySelectorAll('.admin-page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+page).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    var map = {mitglieder:'navMitglieder', admins:'navAdmins', content:'navContent'};
+    document.getElementById(map[page]).classList.add('active');
+  }
+
+  // ---------- chat ----------
+  var msgCount = 4;
+  function sendMessage(){
+    var input = document.getElementById('chatInput');
+    var text = input.value.trim();
+    if(!text) return;
+    var messages = document.getElementById('messages');
+
+    var meRow = document.createElement('div');
+    meRow.className = 'msg-row me';
+    var meCol = document.createElement('div');
+    meCol.className = 'msg-col';
+    meCol.innerHTML = '<div class="bubble"></div><div class="msg-time">'+now()+'</div>';
+    meCol.querySelector('.bubble').textContent = text;
+    meRow.appendChild(meCol);
+    messages.appendChild(meRow);
+    input.value='';
+    messages.scrollTop = messages.scrollHeight;
+
+    setTimeout(function(){
+      var escalate = /myelopathie/i.test(text);
+      var aiRow = document.createElement('div');
+      aiRow.className = 'msg-row ai';
+      var aiCol = document.createElement('div');
+      aiCol.className = 'msg-col';
+      var label = document.createElement('div');
+      label.className='msg-label'; label.textContent='KI-ANTWORT';
+      var bubble = document.createElement('div');
+      bubble.className = 'bubble' + (escalate ? ' fallback' : '');
+      bubble.textContent = escalate
+        ? 'Dazu fehlt mir gesicherte Information. Tina wurde informiert.'
+        : 'Magst du mir noch etwas mehr zur Anamnese sagen — wie ist z. B. Puls und Zunge?';
+      aiCol.appendChild(label);
+      aiCol.appendChild(bubble);
+      if(escalate){
+        var esc = document.createElement('div');
+        esc.className='escalation-note'; esc.innerHTML='⚠️ Team wurde benachrichtigt';
+        aiCol.appendChild(esc);
+      }
+      var time = document.createElement('div');
+      time.className='msg-time'; time.textContent = now();
+      aiCol.appendChild(time);
+      var fb = document.createElement('div');
+      fb.className='feedback-row';
+      fb.innerHTML = '<button class="fb-btn" onclick="feedback(this,\'up\')">👍</button><button class="fb-btn" onclick="feedback(this,\'down\')">👎</button>';
+      aiCol.appendChild(fb);
+      aiRow.appendChild(aiCol);
+      messages.appendChild(aiRow);
+      messages.scrollTop = messages.scrollHeight;
+    }, 500);
+  }
+  function now(){
+    var d = new Date();
+    return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  }
+  function feedback(btn, type){
+    var row = btn.parentElement;
+    row.querySelectorAll('.fb-btn').forEach(b=>{ b.classList.remove('active-up','active-down'); });
+    btn.classList.add(type==='up' ? 'active-up':'active-down');
+    toast(type==='up' ? 'Danke für dein Feedback!' : 'Danke — die Frage wurde an das Support-Team weitergeleitet.');
+  }
+
+  // ---------- knowledge base ----------
+  var versions = {
+    blutmangel: [
+      {v:'v3', date:'24.08.2026', by:'Tina', note:'Symptome bei chronischem Blutmangel präzisiert'},
+      {v:'v2', date:'15.08.2026', by:'Tina', note:'Ko-Zyklus ergänzt'},
+      {v:'v1', date:'05.08.2026', by:'Tina', note:'Erstversion hochgeladen'}
+    ],
+    livecall23: [{v:'v1', date:'12.08.2026', by:'Tina', note:'Transkript aus Live-Call 23'}],
+    magen36: [
+      {v:'v2', date:'20.08.2026', by:'Fiona', note:'Stichrichtung und -tiefe ergänzt'},
+      {v:'v1', date:'02.08.2026', by:'Tina', note:'Erstversion hochgeladen'}
+    ],
+    zunge: [{v:'v1', date:'05.08.2026', by:'Tina', note:'Erstversion hochgeladen'}],
+    livecall24: [{v:'v1', date:'27.08.2026', by:'Tina', note:'Transkript aus Live-Call 24'}]
+  };
+  var docTitles = {blutmangel:'Leitfaden Blutmangel.pdf', livecall23:'Live-Call 23 (Transkript)', magen36:'Akupunktur Magen 36 (Transkript)', zunge:'Grundlagen Zungendiagnostik.pdf', livecall24:'Live-Call 24 (Transkript)'};
+
+  function openVerlauf(docId){
+    document.getElementById('verlaufTitle').textContent = 'Verlauf — ' + docTitles[docId];
+    var list = document.getElementById('verlaufList');
+    list.innerHTML = '';
+    versions[docId].forEach(function(item, i){
+      var el = document.createElement('div');
+      el.className = 'version-item';
+      el.innerHTML = '<div><span class="pill pill-version">'+item.v+'</span> &nbsp; '+item.note+(i===0?' <span style="color:#2F7D32;font-weight:600;font-size:11.5px;">· aktiv</span>':'')+
+        '<div class="vmeta">'+item.date+' · '+item.by+'</div></div>' +
+        (i===0 ? '' : '<button class="btn-outline" onclick="toast(\'Frühere Version wird nur zu Referenzzwecken angezeigt.\')">Ansehen</button>');
+      list.appendChild(el);
+    });
+    openModal('modalVerlauf');
+  }
+  function deleteDoc(btn){
+    if(!confirm('Dokument wirklich löschen? Es wird sofort aus der Suche entfernt und 30 Tage aufbewahrt, bevor es endgültig gelöscht wird.')) return;
+    btn.closest('tr').remove();
+    toast('Dokument gelöscht — 30 Tage wiederherstellbar.');
+  }
+
+  // ---------- members ----------
+  function resetPw(btn){
+    var name = btn.closest('tr').children[0].textContent;
+    if(!confirm('Passwort für '+name+' zurücksetzen? Ein neues Passwort wird per E-Mail versendet.')) return;
+    toast('Neues Passwort wurde an '+name+' gesendet.');
+  }
+  function removeMember(btn){
+    var row = btn.closest('tr');
+    var name = row.children[0].textContent;
+    var status = row.querySelector('.pill-active, .pill-inactive').textContent;
+    var isPro = !!row.querySelector('.pill-package-pro');
+    if(!confirm(name+' wirklich entfernen? Der Zugang zu DOX-AI TCVM wird sofort entzogen.')) return;
+    row.remove();
+    updateMemberStats(status==='Aktiv' ? -1 : 0, status==='Inaktiv' ? -1 : 0, -1, isPro ? -1 : 0, isPro ? 0 : -1);
+    toast(name+' wurde entfernt.');
+  }
+  function addMember(){
+    var name = document.getElementById('newMemberName').value.trim();
+    var email = document.getElementById('newMemberEmail').value.trim();
+    var pkg = document.getElementById('newMemberPackage').value;
+    if(!name || !email){ toast('Bitte Name und E-Mail angeben.'); return; }
+    var tbody = document.getElementById('memberTableBody');
+    var tr = document.createElement('tr');
+    var today = new Date();
+    var dateStr = String(today.getDate()).padStart(2,'0')+'.'+String(today.getMonth()+1).padStart(2,'0')+'.'+today.getFullYear();
+    var pkgPill = pkg==='pro' ? '<span class="pill pill-package-pro">Professional</span>' : '<span class="pill pill-package-basic">Basic</span>';
+    tr.innerHTML = '<td>'+name+'</td><td>'+email+'</td><td>'+pkgPill+'</td><td><span class="pill pill-active" onclick="toggleMemberStatus(this)">Aktiv</span></td><td>'+dateStr+'</td>'+
+      '<td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button><button class="btn-outline danger" onclick="removeMember(this)">Entfernen</button></td>';
+    tbody.appendChild(tr);
+    updateMemberStats(1,0,1, pkg==='pro' ? 1 : 0, pkg==='pro' ? 0 : 1);
+    document.getElementById('newMemberName').value='';
+    document.getElementById('newMemberEmail').value='';
+    document.getElementById('newMemberPackage').value='basic';
+    closeModal('modalNeuesMitglied');
+    toast('Zugangsdaten wurden an '+email+' versendet.');
+  }
+  function updateMemberStats(dActive, dInactive, dTotal, dPro, dBasic){
+    var t = document.getElementById('statTotal'), a=document.getElementById('statActive'), i=document.getElementById('statInactive'), p=document.getElementById('statPro'), b=document.getElementById('statBasic');
+    t.textContent = parseInt(t.textContent)+dTotal;
+    a.textContent = parseInt(a.textContent)+dActive;
+    i.textContent = parseInt(i.textContent)+dInactive;
+    if(dPro){ p.textContent = parseInt(p.textContent)+dPro; }
+    if(dBasic){ b.textContent = parseInt(b.textContent)+dBasic; }
+  }
+  function toggleMemberStatus(pill){
+    var isActive = pill.classList.contains('pill-active');
+    if(isActive){
+      pill.className = 'pill pill-inactive'; pill.textContent = 'Inaktiv';
+      updateMemberStats(-1, 1, 0);
+    } else {
+      pill.className = 'pill pill-active'; pill.textContent = 'Aktiv';
+      updateMemberStats(1, -1, 0);
+    }
+    pill.setAttribute('onclick','toggleMemberStatus(this)');
+  }
+
+  // ---------- admins ----------
+  function removeAdmin(btn){
+    var row = btn.closest('tr');
+    var name = row.children[0].textContent.trim();
+    if(!confirm(name+' wirklich als Admin entfernen?')) return;
+    row.remove();
+    toast(name+' wurde als Admin entfernt.');
+  }
+  function addAdmin(){
+    var name = document.getElementById('newAdminName').value.trim();
+    var email = document.getElementById('newAdminEmail').value.trim();
+    if(!name || !email){ toast('Bitte Name und E-Mail angeben.'); return; }
+    var tbody = document.getElementById('adminTableBody');
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+name+'</td><td>'+email+'</td><td>Mitglieder &amp; Content</td>'+
+      '<td class="row-actions"><button class="btn-outline" onclick="resetPw(this)">Passwort zurücksetzen</button><button class="btn-outline danger" onclick="removeAdmin(this)">Entfernen</button></td>';
+    tbody.appendChild(tr);
+    document.getElementById('newAdminName').value='';
+    document.getElementById('newAdminEmail').value='';
+    closeModal('modalNeuerAdmin');
+    toast('Zugangsdaten wurden an '+email+' versendet.');
+  }
+
+  // ---------- banner ----------
+  function saveBanner(){
+    var text = document.getElementById('bannerText').value.trim();
+    if(!text){ toast('Bitte einen Hinweistext eingeben.'); return; }
+    var live = document.getElementById('maintBannerText');
+    if(live) live.textContent = text;
+    document.getElementById('maintBanner').style.display = 'flex';
+    toast('Banner-Hinweis gespeichert und im Mitgliederbereich aktiv.');
+  }
+
+  // ---------- modal + toast helpers ----------
+  function openModal(id){ document.getElementById(id).classList.add('active'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+  function toast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+  }
+</script>
+</body>
+</html>
